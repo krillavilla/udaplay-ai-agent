@@ -1,0 +1,21 @@
+# 🗝️ Do not track secrets
+.env
+
+# 🧪 Python cache and artifacts
+__pycache__/
+*.pyc
+
+# 💾 Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# 🧠 Vector database (ChromaDB)
+vector_store/
+
+# 🧼 Virtual environment folder
+udaplay-agent/
+
+# 💻 VSCode config (optional)
+.vscode/
+
+# 📝 System files (optional)
+.DS_Store
