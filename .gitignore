@@ -1,21 +1,36 @@
-# 🗝️ Do not track secrets
-.env
+# ----------------------------------------------------------------
+# IDE & System Files
+# ----------------------------------------------------------------
+# JetBrains IDEs like PyCharm/IntelliJ
+/.idea/
 
-# 🧪 Python cache and artifacts
+# VSCode
+/.vscode/
+
+# macOS
+.DS_Store
+
+# ----------------------------------------------------------------
+# Python & Environment
+# ----------------------------------------------------------------
+# Virtual environment
+udaplay-agent/
+
+# Python cache
 __pycache__/
 *.pyc
 
-# 💾 Jupyter notebook checkpoints
+# ----------------------------------------------------------------
+# Project-Specific Files
+# ----------------------------------------------------------------
+# Secrets - DO NOT COMMIT
+.env
+
+# Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# 🧠 Vector database (ChromaDB)
-vector_store/
+# Vector database
+chromadb/
 
-# 🧼 Virtual environment folder
-udaplay-agent/
-
-# 💻 VSCode config (optional)
-.vscode/
-
-# 📝 System files (optional)
-.DS_Store
+# Duplicate/backup files
+*updated.ipynb
