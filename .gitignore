@@ -32,5 +32,6 @@ __pycache__/
 # Vector database
 chromadb/
 
-# Duplicate/backup files
-*updated.ipynb
+.venv
+# Exported HTML files
+exportToHTML/

@@ -155,16 +155,8 @@ class VectorStoreManager:
     """
 
     def __init__(self, openai_api_key: str):
-        if not openai_api_key:
-            raise ValueError(
-                "OpenAI API key is required for embeddings. Please set CHROMA_OPENAI_API_KEY or OPENAI_API_KEY in your .env file."
-            )
-        
-        try:
-            self.chroma_client = chromadb.Client()
-            self.embedding_function = self._create_embedding_function(openai_api_key)
-        except Exception as e:
-            raise ValueError(f"Failed to initialize ChromaDB client: {str(e)}") from e
+        self.chroma_client = chromadb.Client()
+        self.embedding_function = self._create_embedding_function(openai_api_key)
 
     def _create_embedding_function(self, api_key: str) -> EmbeddingFunction:
         embeddings_fn = embedding_functions.OpenAIEmbeddingFunction(
@@ -208,42 +200,6 @@ class VectorStoreManager:
             self.chroma_client.delete_collection(name=store_name)
         except Exception:
             pass  # Store doesn't exist yet
-
-    def semantic_search(self, store_name: str, query: str, k: int = 3) -> QueryResult:
-        """
-        Perform semantic search on a specific vector store.
-
-        This is a convenience method that combines store retrieval and querying
-        into a single operation. It retrieves the specified store and performs
-        a semantic similarity search with the given query.
-
-        Args:
-            store_name (str): Name of the vector store to search
-            query (str): Search query text
-            k (int): Number of results to return (default: 3)
-        
-        Returns:
-            QueryResult: ChromaDB query result containing documents, distances,
-                metadata, and IDs for the most similar documents
-        
-        Raises:
-            ValueError: If the specified store doesn't exist
-        
-        Example:
-            >>> manager = VectorStoreManager(api_key)
-            >>> results = manager.semantic_search("games", "action adventure", k=5)
-            >>> for i, (doc, distance, metadata) in enumerate(zip(
-            ...     results['documents'][0], 
-            ...     results['distances'][0], 
-            ...     results['metadatas'][0]
-            ... )):
-            ...     print(f"Result {i+1}: {metadata.get('Name', 'Unknown')} (similarity: {1-distance:.3f})")
-        """
-        store = self.get_store(store_name)
-        if store is None:
-            raise ValueError(f"Vector store '{store_name}' not found")
-        
-        return store.query(query_texts=[query], n_results=k)
 
 
 class CorpusLoaderService:
