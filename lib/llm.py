@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from openai import OpenAI
@@ -21,7 +22,26 @@ class LLM:
     ):
         self.model = model
         self.temperature = temperature
-        self.client = OpenAI(api_key=api_key) if api_key else OpenAI()
+        
+        # Use Vocareum OpenAI endpoint if the API key starts with 'voc-'
+        api_key = api_key or os.getenv('OPENAI_API_KEY')
+        
+        if not api_key:
+            raise ValueError(
+                "OpenAI API key is required. Please set OPENAI_API_KEY in your .env file or pass it as a parameter."
+            )
+        
+        try:
+            if api_key.startswith('voc-'):
+                self.client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://openai.vocareum.com/v1"
+                )
+            else:
+                self.client = OpenAI(api_key=api_key)
+        except Exception as e:
+            raise ValueError(f"Failed to initialize OpenAI client: {str(e)}")
+            
         self.tools: Dict[str, Tool] = {
             tool.name: tool for tool in (tools or [])
         }
@@ -55,26 +75,40 @@ class LLM:
     def invoke(self, 
                input: str | BaseMessage | List[BaseMessage],
                response_format: BaseModel = None,) -> AIMessage:
-        messages = self._convert_input(input)
-        payload = self._build_payload(messages)
-        if response_format:
-            payload.update({"response_format": response_format})
-            response = self.client.beta.chat.completions.parse(**payload)
-        else:
-            response = self.client.chat.completions.create(**payload)
-        choice = response.choices[0]
-        message = choice.message
+        try:
+            messages = self._convert_input(input)
+            payload = self._build_payload(messages)
+            
+            if response_format:
+                payload.update({"response_format": response_format})
+                response = self.client.beta.chat.completions.parse(**payload)
+            else:
+                response = self.client.chat.completions.create(**payload)
+                
+            choice = response.choices[0]
+            message = choice.message
 
-        token_usage = None
-        if response.usage:
-            token_usage = TokenUsage(
-                prompt_tokens=response.usage.prompt_tokens,
-                completion_tokens=response.usage.completion_tokens,
-                total_tokens=response.usage.total_tokens
+            token_usage = None
+            if response.usage:
+                token_usage = TokenUsage(
+                    prompt_tokens=response.usage.prompt_tokens,
+                    completion_tokens=response.usage.completion_tokens,
+                    total_tokens=response.usage.total_tokens
+                )
+
+            return AIMessage(
+                content=message.content,
+                tool_calls=message.tool_calls,
+                token_usage=token_usage
             )
-
-        return AIMessage(
-            content=message.content,
-            tool_calls=message.tool_calls,
-            token_usage=token_usage
-        )
+        except Exception as e:
+            if "authentication" in str(e).lower() or "api_key" in str(e).lower():
+                raise ValueError(
+                    "Authentication failed. Please check your OPENAI_API_KEY in the .env file and ensure it's valid."
+                ) from e
+            elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                raise ValueError(
+                    "API quota exceeded or rate limit reached. Please check your OpenAI account limits."
+                ) from e
+            else:
+                raise ValueError(f"Failed to invoke LLM: {str(e)}") from e

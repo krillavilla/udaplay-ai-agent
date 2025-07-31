@@ -1,0 +1,22 @@
+# This file defines the code owners for the UdaPlay AI Agent Project
+# These users will be automatically requested for review when PRs are opened.
+
+# Global Owners
+* @udacity
+
+# Library components
+/lib/ @udacity
+
+# Jupyter notebooks  
+*.ipynb @udacity
+
+# Documentation
+README.md @udacity
+LICENSE.md @udacity
+
+# Game data
+/games/ @udacity
+
+# Configuration files
+requirements.txt @udacity
+.gitignore @udacity
