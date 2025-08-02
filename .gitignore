@@ -33,5 +33,3 @@ __pycache__/
 chromadb/
 
 .venv
-# Exported HTML files
-exportToHTML/
