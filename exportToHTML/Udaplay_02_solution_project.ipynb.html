@@ -1,0 +1,304 @@
+<html>
+<head>
+<title>Udaplay_02_solution_project.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #7a7e85;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #f75464;}
+.s6 { color: #2aacb8;}
+.s7 { color: #5f826b; font-style: italic;}
+.ls0 { height: 1px; border-width: 0; color: #43454a; background-color:#43454a}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Udaplay_02_solution_project.ipynb</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#%% md 
+<a name="l2"><span class="ln">2    </span></a># [STARTER] Udaplay Project <hr class="ls0"><a name="l3"><span class="ln">3    </span></a>#%% md 
+<a name="l4"><span class="ln">4    </span></a>### Setup <hr class="ls0"><a name="l5"><span class="ln">5    </span></a>#%% 
+<a name="l6"><span class="ln">6    </span></a></span><span class="s1"># Only needed for Udacity workspace</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">import </span><span class="s0">importlib</span><span class="s3">.</span><span class="s0">util</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">import </span><span class="s0">sys</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s1"># Check if 'pysqlite3' is available before importing</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">if </span><span class="s0">importlib</span><span class="s3">.</span><span class="s0">util</span><span class="s3">.</span><span class="s0">find_spec</span><span class="s3">(</span><span class="s4">&quot;pysqlite3&quot;</span><span class="s3">) </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s2">import </span><span class="s0">pysqlite3</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s0">sys</span><span class="s3">.</span><span class="s0">modules</span><span class="s3">[</span><span class="s4">'sqlite3'</span><span class="s3">] = </span><span class="s0">sys</span><span class="s3">.</span><span class="s0">modules</span><span class="s3">.</span><span class="s0">pop</span><span class="s3">(</span><span class="s4">'pysqlite3'</span><span class="s3">)</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s1"># Install pdfplumber, a dependency for PDF processing in the agent's library</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">if </span><span class="s0">importlib</span><span class="s3">.</span><span class="s0">util</span><span class="s3">.</span><span class="s0">find_spec</span><span class="s3">(</span><span class="s4">&quot;pdfplumber&quot;</span><span class="s3">) </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s5">!</span><span class="s0">pip install pdfplumber</span><hr class="ls0"><a name="l19"><span class="ln">19   </span></a><span class="s0">#%% 
+<a name="l20"><span class="ln">20   </span></a></span><span class="s1"># Import necessary libraries for stateful agent</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s2">import </span><span class="s0">os</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">import </span><span class="s0">json</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s2">import </span><span class="s0">chromadb</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s2">from </span><span class="s0">chromadb</span><span class="s3">.</span><span class="s0">utils </span><span class="s2">import </span><span class="s0">embedding_functions</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s2">from </span><span class="s0">tavily </span><span class="s2">import </span><span class="s0">TavilyClient</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s2">from </span><span class="s0">dotenv </span><span class="s2">import </span><span class="s0">load_dotenv</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s2">from </span><span class="s0">openai </span><span class="s2">import </span><span class="s0">OpenAI</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s2">from </span><span class="s0">typing </span><span class="s2">import </span><span class="s0">Optional</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a><span class="s1"># Import the agent framework</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s1"># from lib.agents import Agent</span><hr class="ls0"><a name="l32"><span class="ln">32   </span></a><span class="s0">#%% 
+<a name="l33"><span class="ln">33   </span></a></span><span class="s1"># Load environment variables</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">load_dotenv</span><span class="s3">()</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a><span class="s1"># Validate required API keys with helpful error messages</span>
+<a name="l37"><span class="ln">37   </span></a><span class="s0">openai_api_key </span><span class="s3">= </span><span class="s0">os</span><span class="s3">.</span><span class="s0">getenv</span><span class="s3">(</span><span class="s4">'OPENAI_API_KEY'</span><span class="s3">)</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s2">if not </span><span class="s0">openai_api_key</span><span class="s3">:</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s2">raise </span><span class="s0">ValueError</span><span class="s3">(</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s4">'OPENAI_API_KEY not found in environment variables. '</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s4">'Please create a .env file with OPENAI_API_KEY=&quot;your_key&quot;'</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s3">)</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a><span class="s0">tavily_api_key </span><span class="s3">= </span><span class="s0">os</span><span class="s3">.</span><span class="s0">getenv</span><span class="s3">(</span><span class="s4">'TAVILY_API_KEY'</span><span class="s3">)</span>
+<a name="l45"><span class="ln">45   </span></a><span class="s2">if not </span><span class="s0">tavily_api_key</span><span class="s3">:</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s2">raise </span><span class="s0">ValueError</span><span class="s3">(</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s4">'TAVILY_API_KEY not found in environment variables. '</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s4">'Please create a .env file with TAVILY_API_KEY=&quot;your_key&quot;'</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s3">)</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a><span class="s1"># Initialize clients with error handling</span>
+<a name="l52"><span class="ln">52   </span></a><span class="s2">try</span><span class="s3">:</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s0">client </span><span class="s3">= </span><span class="s0">OpenAI</span><span class="s3">(</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s0">base_url</span><span class="s3">=</span><span class="s4">&quot;https://openai.vocareum.com/v1&quot;</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s0">api_key</span><span class="s3">=</span><span class="s0">openai_api_key</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s3">)</span>
+<a name="l57"><span class="ln">57   </span></a><span class="s2">except </span><span class="s0">Exception </span><span class="s2">as </span><span class="s0">e</span><span class="s3">:</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">raise </span><span class="s0">ValueError</span><span class="s3">(</span><span class="s4">f'Failed to initialize OpenAI client: </span><span class="s2">{</span><span class="s0">str</span><span class="s3">(</span><span class="s0">e</span><span class="s3">)</span><span class="s2">}</span><span class="s4">'</span><span class="s3">)</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a><span class="s2">try</span><span class="s3">:</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s0">tavily_client </span><span class="s3">= </span><span class="s0">TavilyClient</span><span class="s3">(</span><span class="s0">api_key</span><span class="s3">=</span><span class="s0">tavily_api_key</span><span class="s3">)</span>
+<a name="l62"><span class="ln">62   </span></a><span class="s2">except </span><span class="s0">Exception </span><span class="s2">as </span><span class="s0">e</span><span class="s3">:</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s2">raise </span><span class="s0">ValueError</span><span class="s3">(</span><span class="s4">f'Failed to initialize Tavily client: </span><span class="s2">{</span><span class="s0">str</span><span class="s3">(</span><span class="s0">e</span><span class="s3">)</span><span class="s2">}</span><span class="s4">'</span><span class="s3">)</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">'API clients initialized successfully!'</span><span class="s3">)</span><hr class="ls0"><a name="l66"><span class="ln">66   </span></a><span class="s0">#%% 
+<a name="l67"><span class="ln">67   </span></a></span><span class="s2">from </span><span class="s0">pydantic </span><span class="s2">import </span><span class="s0">BaseModel</span><span class="s3">, </span><span class="s0">Field</span>
+<a name="l68"><span class="ln">68   </span></a><span class="s2">from </span><span class="s0">typing </span><span class="s2">import </span><span class="s0">Optional</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a><span class="s2">class </span><span class="s0">AgentAnswer</span><span class="s3">(</span><span class="s0">BaseModel</span><span class="s3">):</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s0">answer</span><span class="s3">: </span><span class="s0">str </span><span class="s3">= </span><span class="s0">Field</span><span class="s3">(</span><span class="s0">description</span><span class="s3">=</span><span class="s4">&quot;The direct answer to the user's question.&quot;</span><span class="s3">)</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s0">source</span><span class="s3">: </span><span class="s0">str </span><span class="s3">= </span><span class="s0">Field</span><span class="s3">(</span><span class="s0">description</span><span class="s3">=</span><span class="s4">&quot;The source of the information, either the game's name or 'Web Search'.&quot;</span><span class="s3">)</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s0">fallback_used</span><span class="s3">: </span><span class="s0">bool </span><span class="s3">= </span><span class="s0">Field</span><span class="s3">(</span><span class="s0">description</span><span class="s3">=</span><span class="s4">&quot;True if a web search was required to answer the question.&quot;</span><span class="s3">)</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0">internal_reasoning</span><span class="s3">: </span><span class="s0">str </span><span class="s3">= </span><span class="s0">Field</span><span class="s3">(</span><span class="s0">description</span><span class="s3">=</span><span class="s4">&quot;The agent's step-by-step reasoning for its conclusion.&quot;</span><span class="s3">)</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a><span class="s1"># Import the agent framework and tooling</span>
+<a name="l77"><span class="ln">77   </span></a><span class="s2">from </span><span class="s0">lib</span><span class="s3">.</span><span class="s0">agents </span><span class="s2">import </span><span class="s0">Agent</span>
+<a name="l78"><span class="ln">78   </span></a><span class="s2">from </span><span class="s0">lib</span><span class="s3">.</span><span class="s0">tooling </span><span class="s2">import </span><span class="s0">tool</span><hr class="ls0"><a name="l79"><span class="ln">79   </span></a><span class="s0">#%% md 
+<a name="l80"><span class="ln">80   </span></a>### Tools 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>Build at least 3 tools: 
+<a name="l83"><span class="ln">83   </span></a>- retrieve_game: To search the vector DB 
+<a name="l84"><span class="ln">84   </span></a>- evaluate_retrieval: To assess the retrieval performance 
+<a name="l85"><span class="ln">85   </span></a>- game_web_search: If no good, search the web <hr class="ls0"><a name="l86"><span class="ln">86   </span></a>#%% md 
+<a name="l87"><span class="ln">87   </span></a>#### Retrieve Game Tool <hr class="ls0"><a name="l88"><span class="ln">88   </span></a>#%% 
+<a name="l89"><span class="ln">89   </span></a></span><span class="s3">@</span><span class="s0">tool</span>
+<a name="l90"><span class="ln">90   </span></a><span class="s2">def </span><span class="s0">retrieve_game_info</span><span class="s3">(</span><span class="s0">query</span><span class="s3">: </span><span class="s0">str</span><span class="s3">, </span><span class="s0">n_results</span><span class="s3">: </span><span class="s0">int </span><span class="s3">= </span><span class="s6">3</span><span class="s3">) </span><span class="s0">-&gt; list</span><span class="s3">[</span><span class="s0">str</span><span class="s3">]:</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s7">&quot;&quot;&quot; 
+<a name="l92"><span class="ln">92   </span></a>    Semantic search: Finds most relevant games in the vector database. 
+<a name="l93"><span class="ln">93   </span></a>     
+<a name="l94"><span class="ln">94   </span></a>    Args: 
+<a name="l95"><span class="ln">95   </span></a>        query: A question about the game industry 
+<a name="l96"><span class="ln">96   </span></a>        n_results: Number of results to return (default: 3) 
+<a name="l97"><span class="ln">97   </span></a>     
+<a name="l98"><span class="ln">98   </span></a>    Returns: 
+<a name="l99"><span class="ln">99   </span></a>        List of JSON strings containing game metadata including: 
+<a name="l100"><span class="ln">100  </span></a>        - Platform: Game Boy, PlayStation 5, Xbox 360, etc. 
+<a name="l101"><span class="ln">101  </span></a>        - Name: Name of the game 
+<a name="l102"><span class="ln">102  </span></a>        - YearOfRelease: Year when the game was released 
+<a name="l103"><span class="ln">103  </span></a>        - Description: Additional details about the game 
+<a name="l104"><span class="ln">104  </span></a>        - Genre: Game genre 
+<a name="l105"><span class="ln">105  </span></a>        - Publisher: Game publisher 
+<a name="l106"><span class="ln">106  </span></a>    &quot;&quot;&quot;</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;🔍 Tool: Retrieving game info for query: '</span><span class="s2">{</span><span class="s0">query</span><span class="s2">}</span><span class="s4">'&quot;</span><span class="s3">)</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s0">chroma_client </span><span class="s3">= </span><span class="s0">chromadb</span><span class="s3">.</span><span class="s0">PersistentClient</span><span class="s3">(</span><span class="s0">path</span><span class="s3">=</span><span class="s4">&quot;chromadb&quot;</span><span class="s3">)</span>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s0">embedding_fn </span><span class="s3">= </span><span class="s0">embedding_functions</span><span class="s3">.</span><span class="s0">OpenAIEmbeddingFunction</span><span class="s3">(</span>
+<a name="l111"><span class="ln">111  </span></a>        <span class="s0">api_key</span><span class="s3">=</span><span class="s0">os</span><span class="s3">.</span><span class="s0">getenv</span><span class="s3">(</span><span class="s4">&quot;OPENAI_API_KEY&quot;</span><span class="s3">),</span>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s0">api_base</span><span class="s3">=</span><span class="s4">&quot;https://openai.vocareum.com/v1&quot;</span><span class="s3">,  </span><span class="s1"># For Vocareum</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s0">model_name</span><span class="s3">=</span><span class="s4">&quot;text-embedding-ada-002&quot;</span>
+<a name="l114"><span class="ln">114  </span></a>    <span class="s3">)</span>
+<a name="l115"><span class="ln">115  </span></a>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s0">collection </span><span class="s3">= </span><span class="s0">chroma_client</span><span class="s3">.</span><span class="s0">get_collection</span><span class="s3">(</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s0">name</span><span class="s3">=</span><span class="s4">&quot;udaplay&quot;</span><span class="s3">,</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s0">embedding_function</span><span class="s3">=</span><span class="s0">embedding_fn</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s3">)</span>
+<a name="l120"><span class="ln">120  </span></a>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s1"># Query the collection</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s0">results </span><span class="s3">= </span><span class="s0">collection</span><span class="s3">.</span><span class="s0">query</span><span class="s3">(</span><span class="s0">query_texts</span><span class="s3">=[</span><span class="s0">query</span><span class="s3">], </span><span class="s0">n_results</span><span class="s3">=</span><span class="s0">n_results</span><span class="s3">)</span>
+<a name="l123"><span class="ln">123  </span></a>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s1"># Format the retrieved documents for the next step</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s0">retrieved_docs </span><span class="s3">= []</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s2">if </span><span class="s0">results </span><span class="s2">and </span><span class="s0">results</span><span class="s3">[</span><span class="s4">'metadatas'</span><span class="s3">][</span><span class="s6">0</span><span class="s3">]:</span>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s2">for </span><span class="s0">meta </span><span class="s2">in </span><span class="s0">results</span><span class="s3">[</span><span class="s4">'metadatas'</span><span class="s3">][</span><span class="s6">0</span><span class="s3">]:</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s1"># Pass the full JSON metadata as a string</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s0">retrieved_docs</span><span class="s3">.</span><span class="s0">append</span><span class="s3">(</span><span class="s0">json</span><span class="s3">.</span><span class="s0">dumps</span><span class="s3">(</span><span class="s0">meta</span><span class="s3">))</span>
+<a name="l130"><span class="ln">130  </span></a>    
+<a name="l131"><span class="ln">131  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Retrieved </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">retrieved_docs</span><span class="s3">)</span><span class="s2">} </span><span class="s4">games from vector database&quot;</span><span class="s3">)</span>
+<a name="l132"><span class="ln">132  </span></a>    <span class="s2">return </span><span class="s0">retrieved_docs</span><hr class="ls0"><a name="l133"><span class="ln">133  </span></a><span class="s0">#%% md 
+<a name="l134"><span class="ln">134  </span></a>#### Evaluate Retrieval Tool <hr class="ls0"><a name="l135"><span class="ln">135  </span></a>#%% 
+<a name="l136"><span class="ln">136  </span></a></span><span class="s3">@</span><span class="s0">tool</span>
+<a name="l137"><span class="ln">137  </span></a><span class="s2">def </span><span class="s0">evaluate_retrieval</span><span class="s3">(</span><span class="s0">query</span><span class="s3">: </span><span class="s0">str</span><span class="s3">, </span><span class="s0">context</span><span class="s3">: </span><span class="s0">list</span><span class="s3">[</span><span class="s0">str</span><span class="s3">]) </span><span class="s0">-&gt; bool</span><span class="s3">:</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s7">&quot;&quot;&quot; 
+<a name="l139"><span class="ln">139  </span></a>    Based on the user's question and retrieved documents, analyzes if the documents  
+<a name="l140"><span class="ln">140  </span></a>    are sufficient to answer the question. 
+<a name="l141"><span class="ln">141  </span></a>     
+<a name="l142"><span class="ln">142  </span></a>    Args: 
+<a name="l143"><span class="ln">143  </span></a>        query: Original question from user 
+<a name="l144"><span class="ln">144  </span></a>        context: Retrieved documents most similar to the user query in the Vector Database 
+<a name="l145"><span class="ln">145  </span></a>     
+<a name="l146"><span class="ln">146  </span></a>    Returns: 
+<a name="l147"><span class="ln">147  </span></a>        bool: True if documents are sufficient, False if web search is needed 
+<a name="l148"><span class="ln">148  </span></a>    &quot;&quot;&quot;</span>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Evaluating if retrieved context is sufficient for: '</span><span class="s2">{</span><span class="s0">query</span><span class="s2">}</span><span class="s4">'&quot;</span><span class="s3">)</span>
+<a name="l150"><span class="ln">150  </span></a>    
+<a name="l151"><span class="ln">151  </span></a>    <span class="s1"># A simple but effective prompt for the LLM</span>
+<a name="l152"><span class="ln">152  </span></a>    <span class="s0">prompt </span><span class="s3">= </span><span class="s4">f&quot;&quot;&quot;</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s4">Based *only* on the provided context below, can you confidently answer the following user question?</span>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s4">Respond with only &quot;yes&quot; or &quot;no&quot;.</span>
+<a name="l155"><span class="ln">155  </span></a>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s4">User Question: &quot;</span><span class="s2">{</span><span class="s0">query</span><span class="s2">}</span><span class="s4">&quot;</span>
+<a name="l157"><span class="ln">157  </span></a>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s4">Context:</span>
+<a name="l159"><span class="ln">159  </span></a>    <span class="s4">---</span>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s2">{</span><span class="s0">context</span><span class="s2">}</span>
+<a name="l161"><span class="ln">161  </span></a>    <span class="s4">---</span>
+<a name="l162"><span class="ln">162  </span></a>    <span class="s4">&quot;&quot;&quot;</span>
+<a name="l163"><span class="ln">163  </span></a>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s1"># Use the configured client object here</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s0">response </span><span class="s3">= </span><span class="s0">client</span><span class="s3">.</span><span class="s0">chat</span><span class="s3">.</span><span class="s0">completions</span><span class="s3">.</span><span class="s0">create</span><span class="s3">(</span>
+<a name="l166"><span class="ln">166  </span></a>        <span class="s0">model</span><span class="s3">=</span><span class="s4">&quot;gpt-3.5-turbo&quot;</span><span class="s3">,</span>
+<a name="l167"><span class="ln">167  </span></a>        <span class="s0">messages</span><span class="s3">=[{</span><span class="s4">&quot;role&quot;</span><span class="s3">: </span><span class="s4">&quot;user&quot;</span><span class="s3">, </span><span class="s4">&quot;content&quot;</span><span class="s3">: </span><span class="s0">prompt</span><span class="s3">}],</span>
+<a name="l168"><span class="ln">168  </span></a>        <span class="s0">max_tokens</span><span class="s3">=</span><span class="s6">5</span><span class="s3">,</span>
+<a name="l169"><span class="ln">169  </span></a>        <span class="s0">temperature</span><span class="s3">=</span><span class="s6">0.0</span>
+<a name="l170"><span class="ln">170  </span></a>    <span class="s3">)</span>
+<a name="l171"><span class="ln">171  </span></a>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s0">decision </span><span class="s3">= </span><span class="s0">response</span><span class="s3">.</span><span class="s0">choices</span><span class="s3">[</span><span class="s6">0</span><span class="s3">].</span><span class="s0">message</span><span class="s3">.</span><span class="s0">content</span><span class="s3">.</span><span class="s0">strip</span><span class="s3">().</span><span class="s0">lower</span><span class="s3">()</span>
+<a name="l173"><span class="ln">173  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Evaluation: LLM decision is '</span><span class="s2">{</span><span class="s0">decision</span><span class="s2">}</span><span class="s4">'&quot;</span><span class="s3">)</span>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s2">return </span><span class="s4">&quot;yes&quot; </span><span class="s2">in </span><span class="s0">decision</span><hr class="ls0"><a name="l175"><span class="ln">175  </span></a><span class="s0">#%% md 
+<a name="l176"><span class="ln">176  </span></a>#### Game Web Search Tool <hr class="ls0"><a name="l177"><span class="ln">177  </span></a>#%% 
+<a name="l178"><span class="ln">178  </span></a></span><span class="s3">@</span><span class="s0">tool</span>
+<a name="l179"><span class="ln">179  </span></a><span class="s2">def </span><span class="s0">game_web_search</span><span class="s3">(</span><span class="s0">query</span><span class="s3">: </span><span class="s0">str</span><span class="s3">) </span><span class="s0">-&gt; str</span><span class="s3">:</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s7">&quot;&quot;&quot; 
+<a name="l181"><span class="ln">181  </span></a>    Performs a web search using Tavily API when local database is insufficient. 
+<a name="l182"><span class="ln">182  </span></a>     
+<a name="l183"><span class="ln">183  </span></a>    Args: 
+<a name="l184"><span class="ln">184  </span></a>        query: A question about the game industry 
+<a name="l185"><span class="ln">185  </span></a>     
+<a name="l186"><span class="ln">186  </span></a>    Returns: 
+<a name="l187"><span class="ln">187  </span></a>        str: Content from the most relevant web search result 
+<a name="l188"><span class="ln">188  </span></a>    &quot;&quot;&quot;</span>
+<a name="l189"><span class="ln">189  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;🌐 Tool: Performing web search for query: '</span><span class="s2">{</span><span class="s0">query</span><span class="s2">}</span><span class="s4">'&quot;</span><span class="s3">)</span>
+<a name="l190"><span class="ln">190  </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s0">response </span><span class="s3">= </span><span class="s0">tavily_client</span><span class="s3">.</span><span class="s0">search</span><span class="s3">(</span><span class="s0">query</span><span class="s3">=</span><span class="s0">query</span><span class="s3">, </span><span class="s0">search_depth</span><span class="s3">=</span><span class="s4">&quot;basic&quot;</span><span class="s3">)</span>
+<a name="l192"><span class="ln">192  </span></a>        <span class="s1"># We'll return the most relevant search result content</span>
+<a name="l193"><span class="ln">193  </span></a>        <span class="s0">content </span><span class="s3">= </span><span class="s0">response</span><span class="s3">[</span><span class="s4">'results'</span><span class="s3">][</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'content'</span><span class="s3">]</span>
+<a name="l194"><span class="ln">194  </span></a>        <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Web search completed successfully&quot;</span><span class="s3">)</span>
+<a name="l195"><span class="ln">195  </span></a>        <span class="s2">return </span><span class="s0">content</span>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s2">except </span><span class="s0">Exception </span><span class="s2">as </span><span class="s0">e</span><span class="s3">:</span>
+<a name="l197"><span class="ln">197  </span></a>        <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Error during Tavily search: </span><span class="s2">{</span><span class="s0">e</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l198"><span class="ln">198  </span></a>        <span class="s2">return </span><span class="s4">&quot;Web search failed.&quot;</span><hr class="ls0"><a name="l199"><span class="ln">199  </span></a><span class="s0">#%% md 
+<a name="l200"><span class="ln">200  </span></a>### Agent Setup and Usage <hr class="ls0"><a name="l201"><span class="ln">201  </span></a>#%% 
+<a name="l202"><span class="ln">202  </span></a></span><span class="s1"># Test the tools individually to verify they work before agent integration</span>
+<a name="l203"><span class="ln">203  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">&quot;Testing retrieve_game_info:&quot;</span><span class="s3">)</span>
+<a name="l204"><span class="ln">204  </span></a><span class="s0">results </span><span class="s3">= </span><span class="s0">retrieve_game_info</span><span class="s3">(</span><span class="s4">&quot;Nintendo games&quot;</span><span class="s3">)</span>
+<a name="l205"><span class="ln">205  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Retrieved </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">results</span><span class="s3">)</span><span class="s2">} </span><span class="s4">results&quot;</span><span class="s3">)</span>
+<a name="l206"><span class="ln">206  </span></a>
+<a name="l207"><span class="ln">207  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">Testing evaluate_retrieval:&quot;</span><span class="s3">)</span>
+<a name="l208"><span class="ln">208  </span></a><span class="s0">evaluation </span><span class="s3">= </span><span class="s0">evaluate_retrieval</span><span class="s3">(</span><span class="s4">&quot;What Nintendo games are available?&quot;</span><span class="s3">, </span><span class="s0">results</span><span class="s3">)</span>
+<a name="l209"><span class="ln">209  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Evaluation result: </span><span class="s2">{</span><span class="s0">evaluation</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l210"><span class="ln">210  </span></a>
+<a name="l211"><span class="ln">211  </span></a><span class="s2">if not </span><span class="s0">evaluation</span><span class="s3">:</span>
+<a name="l212"><span class="ln">212  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">Testing game_web_search:&quot;</span><span class="s3">)</span>
+<a name="l213"><span class="ln">213  </span></a>    <span class="s0">web_result </span><span class="s3">= </span><span class="s0">game_web_search</span><span class="s3">(</span><span class="s4">&quot;popular Nintendo games&quot;</span><span class="s3">)</span>
+<a name="l214"><span class="ln">214  </span></a>    <span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Web search result preview: </span><span class="s2">{</span><span class="s0">web_result</span><span class="s3">[:</span><span class="s6">200</span><span class="s3">]</span><span class="s2">}</span><span class="s4">...&quot;</span><span class="s3">)</span><hr class="ls0"><a name="l215"><span class="ln">215  </span></a><span class="s0">#%% 
+<a name="l216"><span class="ln">216  </span></a></span><span class="s1"># Define the system prompt for UdaPlay agent</span>
+<a name="l217"><span class="ln">217  </span></a><span class="s0">UDAPLAY_SYSTEM_PROMPT </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot; 
+<a name="l218"><span class="ln">218  </span></a>You are UdaPlay, an AI research agent specialized in the video game industry. 
+<a name="l219"><span class="ln">219  </span></a> 
+<a name="l220"><span class="ln">220  </span></a>Your capabilities include: 
+<a name="l221"><span class="ln">221  </span></a>1. Searching a comprehensive database of video games using semantic search 
+<a name="l222"><span class="ln">222  </span></a>2. Evaluating whether retrieved information is sufficient to answer queries 
+<a name="l223"><span class="ln">223  </span></a>3. Performing web searches when local knowledge is insufficient 
+<a name="l224"><span class="ln">224  </span></a> 
+<a name="l225"><span class="ln">225  </span></a>When answering questions: 
+<a name="l226"><span class="ln">226  </span></a>1. First, search your local database for relevant game information 
+<a name="l227"><span class="ln">227  </span></a>2. Evaluate if the retrieved context is sufficient to answer the question 
+<a name="l228"><span class="ln">228  </span></a>3. If not sufficient, perform a web search for additional information 
+<a name="l229"><span class="ln">229  </span></a>4. Provide comprehensive, accurate answers based on available information 
+<a name="l230"><span class="ln">230  </span></a> 
+<a name="l231"><span class="ln">231  </span></a>Always be helpful, accurate, and cite your sources when possible. 
+<a name="l232"><span class="ln">232  </span></a>For queries about game releases, platforms, genres, or specific game details, 
+<a name="l233"><span class="ln">233  </span></a>prioritize information from your local database first. 
+<a name="l234"><span class="ln">234  </span></a> 
+<a name="l235"><span class="ln">235  </span></a>Always structure your final response as valid JSON using the AgentAnswer format: 
+<a name="l236"><span class="ln">236  </span></a>{ 
+<a name="l237"><span class="ln">237  </span></a>  &quot;answer&quot;: &quot;The direct answer to the user's question&quot;, 
+<a name="l238"><span class="ln">238  </span></a>  &quot;source&quot;: &quot;Source of information (game name or 'Web Search')&quot;, 
+<a name="l239"><span class="ln">239  </span></a>  &quot;fallback_used&quot;: true/false, 
+<a name="l240"><span class="ln">240  </span></a>  &quot;internal_reasoning&quot;: &quot;Step-by-step reasoning process&quot; 
+<a name="l241"><span class="ln">241  </span></a>} 
+<a name="l242"><span class="ln">242  </span></a>&quot;&quot;&quot;</span>
+<a name="l243"><span class="ln">243  </span></a>
+<a name="l244"><span class="ln">244  </span></a><span class="s1"># Instantiate the stateful Agent</span>
+<a name="l245"><span class="ln">245  </span></a><span class="s0">udaplay_agent </span><span class="s3">= </span><span class="s0">Agent</span><span class="s3">(</span>
+<a name="l246"><span class="ln">246  </span></a>    <span class="s0">model_name</span><span class="s3">=</span><span class="s4">&quot;gpt-4o-mini&quot;</span><span class="s3">,</span>
+<a name="l247"><span class="ln">247  </span></a>    <span class="s0">instructions</span><span class="s3">=</span><span class="s0">UDAPLAY_SYSTEM_PROMPT</span><span class="s3">,</span>
+<a name="l248"><span class="ln">248  </span></a>    <span class="s0">tools</span><span class="s3">=[</span><span class="s0">retrieve_game_info</span><span class="s3">, </span><span class="s0">evaluate_retrieval</span><span class="s3">, </span><span class="s0">game_web_search</span><span class="s3">],</span>
+<a name="l249"><span class="ln">249  </span></a>    <span class="s0">temperature</span><span class="s3">=</span><span class="s6">0.0</span><span class="s3">,</span>
+<a name="l250"><span class="ln">250  </span></a><span class="s3">)</span>
+<a name="l251"><span class="ln">251  </span></a>
+<a name="l252"><span class="ln">252  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">'UdaPlay Agent instantiated successfully!'</span><span class="s3">)</span>
+<a name="l253"><span class="ln">253  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f'Model: </span><span class="s2">{</span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">model_name</span><span class="s2">}</span><span class="s4">'</span><span class="s3">)</span>
+<a name="l254"><span class="ln">254  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f'Number of tools: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">tools</span><span class="s3">)</span><span class="s2">}</span><span class="s4">'</span><span class="s3">)</span>
+<a name="l255"><span class="ln">255  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f'Available tools: </span><span class="s2">{</span><span class="s3">[</span><span class="s0">tool</span><span class="s3">.</span><span class="s0">name </span><span class="s2">for </span><span class="s0">tool </span><span class="s2">in </span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">tools</span><span class="s3">]</span><span class="s2">}</span><span class="s4">'</span><span class="s3">)</span><hr class="ls0"><a name="l256"><span class="ln">256  </span></a><span class="s0">#%% 
+<a name="l257"><span class="ln">257  </span></a></span><span class="s1"># Demonstrate memory and session management</span>
+<a name="l258"><span class="ln">258  </span></a><span class="s1"># The agent maintains conversation state - let's test this with follow-up questions</span>
+<a name="l259"><span class="ln">259  </span></a>
+<a name="l260"><span class="ln">260  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">&quot;=== Demonstrating Stateful Memory ===&quot;</span><span class="s3">)</span>
+<a name="l261"><span class="ln">261  </span></a>
+<a name="l262"><span class="ln">262  </span></a><span class="s1"># First question</span>
+<a name="l263"><span class="ln">263  </span></a><span class="s0">first_query </span><span class="s3">= </span><span class="s4">&quot;Tell me about Nintendo games in our database&quot;</span>
+<a name="l264"><span class="ln">264  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Query 1: </span><span class="s2">{</span><span class="s0">first_query</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l265"><span class="ln">265  </span></a>
+<a name="l266"><span class="ln">266  </span></a><span class="s0">run1 </span><span class="s3">= </span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">invoke</span><span class="s3">(</span><span class="s0">first_query</span><span class="s3">)</span>
+<a name="l267"><span class="ln">267  </span></a><span class="s0">state1 </span><span class="s3">= </span><span class="s0">run1</span><span class="s3">.</span><span class="s0">get_final_state</span><span class="s3">()</span>
+<a name="l268"><span class="ln">268  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Answer 1: </span><span class="s2">{</span><span class="s0">state1</span><span class="s3">[</span><span class="s4">'messages'</span><span class="s3">][-</span><span class="s6">1</span><span class="s3">].</span><span class="s0">content</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l269"><span class="ln">269  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Messages in session: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">state1</span><span class="s3">[</span><span class="s4">'messages'</span><span class="s3">])</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l270"><span class="ln">270  </span></a>
+<a name="l271"><span class="ln">271  </span></a><span class="s1"># Follow-up question that references the previous conversation</span>
+<a name="l272"><span class="ln">272  </span></a><span class="s0">followup_query </span><span class="s3">= </span><span class="s4">&quot;Which of those were released before 2000?&quot;</span>
+<a name="l273"><span class="ln">273  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;</span><span class="s2">\n</span><span class="s4">Query 2 (follow-up): </span><span class="s2">{</span><span class="s0">followup_query</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l274"><span class="ln">274  </span></a>
+<a name="l275"><span class="ln">275  </span></a><span class="s0">run2 </span><span class="s3">= </span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">invoke</span><span class="s3">(</span><span class="s0">followup_query</span><span class="s3">)</span>
+<a name="l276"><span class="ln">276  </span></a><span class="s0">state2 </span><span class="s3">= </span><span class="s0">run2</span><span class="s3">.</span><span class="s0">get_final_state</span><span class="s3">()</span>
+<a name="l277"><span class="ln">277  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Answer 2: </span><span class="s2">{</span><span class="s0">state2</span><span class="s3">[</span><span class="s4">'messages'</span><span class="s3">][-</span><span class="s6">1</span><span class="s3">].</span><span class="s0">content</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l278"><span class="ln">278  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Messages in session: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">state2</span><span class="s3">[</span><span class="s4">'messages'</span><span class="s3">])</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l279"><span class="ln">279  </span></a>
+<a name="l280"><span class="ln">280  </span></a><span class="s1"># Demonstrate session reset</span>
+<a name="l281"><span class="ln">281  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">=== Session Management ===&quot;</span><span class="s3">)</span>
+<a name="l282"><span class="ln">282  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Session runs before reset: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">get_session_runs</span><span class="s3">())</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l283"><span class="ln">283  </span></a>
+<a name="l284"><span class="ln">284  </span></a><span class="s1"># Start a new session</span>
+<a name="l285"><span class="ln">285  </span></a><span class="s0">new_session_query </span><span class="s3">= </span><span class="s4">&quot;What racing games do we have?&quot;</span>
+<a name="l286"><span class="ln">286  </span></a><span class="s0">run3 </span><span class="s3">= </span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">invoke</span><span class="s3">(</span><span class="s0">new_session_query</span><span class="s3">, </span><span class="s0">session_id</span><span class="s3">=</span><span class="s4">&quot;racing_session&quot;</span><span class="s3">)</span>
+<a name="l287"><span class="ln">287  </span></a><span class="s0">state3 </span><span class="s3">= </span><span class="s0">run3</span><span class="s3">.</span><span class="s0">get_final_state</span><span class="s3">()</span>
+<a name="l288"><span class="ln">288  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;New session answer: </span><span class="s2">{</span><span class="s0">state3</span><span class="s3">[</span><span class="s4">'messages'</span><span class="s3">][-</span><span class="s6">1</span><span class="s3">].</span><span class="s0">content</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l289"><span class="ln">289  </span></a>
+<a name="l290"><span class="ln">290  </span></a><span class="s1"># Show that different sessions have different histories</span>
+<a name="l291"><span class="ln">291  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Default session runs: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">get_session_runs</span><span class="s3">(</span><span class="s4">'default'</span><span class="s3">))</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l292"><span class="ln">292  </span></a><span class="s0">print</span><span class="s3">(</span><span class="s4">f&quot;Racing session runs: </span><span class="s2">{</span><span class="s0">len</span><span class="s3">(</span><span class="s0">udaplay_agent</span><span class="s3">.</span><span class="s0">get_session_runs</span><span class="s3">(</span><span class="s4">'racing_session'</span><span class="s3">))</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span><hr class="ls0"><a name="l293"><span class="ln">293  </span></a><span class="s0">#%% md 
+<a name="l294"><span class="ln">294  </span></a>### (Optional) Advanced <hr class="ls0"><a name="l295"><span class="ln">295  </span></a>#%% 
+<a name="l296"><span class="ln">296  </span></a></span><span class="s1"># TODO: Update your agent with long-term memory</span>
+<a name="l297"><span class="ln">297  </span></a><span class="s1"># TODO: Convert the agent to be a state machine, with the tools being pre-defined nodes</span></pre>
+</body>
+</html>

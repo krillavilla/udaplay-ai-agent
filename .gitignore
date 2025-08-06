@@ -33,3 +33,5 @@ __pycache__/
 chromadb/
 
 .venv
+
+PROJECT_STRUCTURE.md

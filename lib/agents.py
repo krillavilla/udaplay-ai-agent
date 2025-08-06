@@ -1,5 +1,7 @@
 from typing import TypedDict, List, Optional, Union, TypeVar
 import json
+import os
+from openai import OpenAI
 
 from lib.state_machine import StateMachine, Step, EntryPoint, Termination, Run
 from lib.llm import LLM
@@ -57,11 +59,12 @@ class Agent:
 
     def _llm_step(self, state: AgentState) -> AgentState:
         """Step logic: Process the current state through the LLM"""
-        # Initialize LLM
+        # Initialize LLM with correct API key
         llm = LLM(
             model=self.model_name,
             temperature=self.temperature,
-            tools=self.tools
+            tools=self.tools,
+            api_key=os.getenv('OPENAI_API_KEY')
         )
 
         response = llm.invoke(state["messages"])
